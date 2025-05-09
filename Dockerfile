@@ -1,24 +1,20 @@
 FROM ubuntu:22.04
 
-ENV CATALINA_HOME /opt/tomcat
-ENV PATH $CATALINA_HOME/bin:$PATH
+# Actualizar sistema e instalar Java
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install -y openjdk-17-jre-headless
 
-# Instalar Java y dependencias
-RUN apt-get update && apt-get install -y openjdk-17-jre-headless curl && \
-    rm -rf /var/lib/apt/lists/*
+# Crear directorio Tomcat y descargarlo
+RUN mkdir /opt/tomcat
+WORKDIR /tmp
+ADD https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.40/bin/apache-tomcat-10.1.40.tar.gz .
+RUN tar -xzvf apache-tomcat-10.1.40.tar.gz -C /opt/tomcat --strip-components=1
 
-# Descargar y descomprimir Tomcat
-RUN mkdir -p /opt/tomcat
-WORKDIR /opt/tomcat
-RUN curl -O https://dlcdn.apache.org/tomcat/tomcat-10/v10.1.40/bin/apache-tomcat-10.1.40.tar.gz && \
-    tar -xzf apache-tomcat-10.1.40.tar.gz --strip-components=1 && \
-    rm apache-tomcat-10.1.40.tar.gz
-
-# Copiar WAR a webapps
+# Copiar el archivo WAR a la carpeta webapps
 COPY ./*.war /opt/tomcat/webapps/
 
-# Exponer el puerto
+# Exponer el puerto por defecto de Tomcat
 EXPOSE 8080
 
 # Ejecutar Tomcat
-CMD ["catalina.sh", "run"]
+CMD ["/opt/tomcat/bin/catalina.sh", "run"]
